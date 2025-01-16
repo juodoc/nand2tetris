@@ -27,8 +27,42 @@
     M=511
 
 (COL)
+    @j
+    D=M
+    @c
+    D=M-D
 
+    @LOOP
+    D;JGT
+
+    @j
+    M=M+1
+    @i
+    M=0
 (ROW)
+    @i
+    D=M
+    @r
+    D=D-M
+
+    @COLUMNS
+    D;JGT
+
+    @addr
+    A=M
+    M=-1
+
+    @i
+    M=M+1
+
+    @32
+    D=A
+
+    @addr
+    M=D+M
+
+    @ROWLOOP
+    0;JMP
 
 (LOOP)
     //If keyboard == 0 loop until keypress
@@ -36,7 +70,7 @@
     A=M
     D=M
 
-    @LOOP
+    @COL
     D;JEQ
 
     @r
@@ -48,7 +82,8 @@
     @c
     D=M-D
 
-    @
+    @LOOP
+    D;JGT
 
     @j
     M=M+1
