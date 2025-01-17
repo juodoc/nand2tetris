@@ -32,11 +32,26 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
+
+    And(a=instruction[15], b=instruction[3], out=writeM);
+    And(a=instruction[1], b=zr, out=j2zr);
+    And(a=instruction[2], b=ng, out=j1ng);
+    Or(a=j2zr, b=j1ng, out=jngzr);
+    Not(in=jngzr, out=jngzr2);
+    And(a=instruction[0], b=jngzr2, out=jlt);
+    Or(a=jngzr, b=jlt, out=loader);
     
-	Mux16(a=aluOut, b=instruction, sel=instruction[12], out=addressValue);
-    ARegister(in=addressValue, load=instruction[5], out=);
-    Mux16(a=, b=, sel=, out=);
-    DRegister(in=, load=instruction[4], out=);
-    ALU(x=inM, y=instruction, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7], no=instruction[6], out=aluOut, zr=zr, ng=ng);
-    PC(in=addressValue, load=, inc=true, reset=reset, out=);
+	Mux16(a=instruction, b=aluOut, sel=instruction[15], out=addressValue);
+    ARegister(in=addressValue, load=instruction[5], out=aAddressValue);
+    And16(a=true, b=aAddressValue, out[0..14]=addressM);
+
+    Mux16(a=aAddressValue, b=inM, sel=instruction[12], out=inMARegister);
+    
+    DRegister(in=aluOut, load=instruction[4], out=dValue);
+    
+    ALU(x=dValue, y=inMARegister, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7], no=instruction[6], out=outM, zr=zr, ng=ng);
+    ALU(x=dValue, y=inMARegister, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7], no=instruction[6], out=aluOut);
+    
+    PC(in=addressValue, load=loader, inc=true, reset=reset, out[0..14]=pc);
+
 }
