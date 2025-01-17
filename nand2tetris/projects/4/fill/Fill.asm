@@ -23,13 +23,16 @@
     @key
     M=D
 
-    @c
-    M=511
+(INIT)
+    @511
+    M=A
+    @255
+    M=A
 
 (COL)
     @j
     D=M
-    @c
+    @511
     D=M-D
 
     @LOOP
@@ -42,15 +45,15 @@
 (ROW)
     @i
     D=M
-    @r
+    @255
     D=D-M
 
-    @COLUMNS
+    @COL
     D;JGT
 
     @addr
     A=M
-    M=-1
+    M=0
 
     @i
     M=M+1
@@ -61,7 +64,7 @@
     @addr
     M=D+M
 
-    @ROWLOOP
+    @ROW
     0;JMP
 
 (LOOP)
@@ -70,16 +73,18 @@
     A=M
     D=M
 
-    @COL
+    @INIT
     D;JEQ
 
-    @r
-    M=255
+    @511
+    M=A
+    @255
+    M=A
 
 (COLUMNS)
     @j
     D=M
-    @c
+    @511
     D=M-D
 
     @LOOP
@@ -94,7 +99,7 @@
 (ROWLOOP)
     @i
     D=M
-    @r
+    @255
     D=D-M
 
     @COLUMNS
