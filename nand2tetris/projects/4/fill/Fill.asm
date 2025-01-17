@@ -8,6 +8,8 @@
 // i.e. writes "black" in every pixel. When no key is pressed, 
 // the screen should be cleared.
 
+// Each loop calls the inner loop 256 times when multiplied covers the 8,191 bits needs. The last bit is not changed
+
     @24576
     D=A
     @key
