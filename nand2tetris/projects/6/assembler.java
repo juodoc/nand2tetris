@@ -90,7 +90,10 @@ public class assembler {
     }
 
     public void cInstruction(String currentInstruction) {
-
+        String binary = "111";
+        String dest = "";
+        String comp = "";
+        String jump = ""; // could use a scanner or use a delimeter<---(best option) the string and use logic to find the answer.
     }
 
     public void symbolSorter(String symbol) {
