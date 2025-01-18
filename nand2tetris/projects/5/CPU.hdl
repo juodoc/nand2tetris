@@ -32,26 +32,29 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-
-    And(a=instruction[15], b=instruction[3], out=writeM);
-    And(a=instruction[1], b=zr, out=j2zr);
-    And(a=instruction[2], b=ng, out=j1ng);
-    Or(a=j2zr, b=j1ng, out=jngzr);
-    Not(in=jngzr, out=jngzr2);
-    And(a=instruction[0], b=jngzr2, out=jlt);
-    Or(a=jngzr, b=jlt, out=loader);
-    
 	Mux16(a=instruction, b=aluOut, sel=instruction[15], out=addressValue);
-    ARegister(in=addressValue, load=instruction[5], out=aAddressValue);
-    And16(a=true, b=aAddressValue, out[0..14]=addressM);
+    Mux(a=true, b=instruction[5], sel=instruction[15], out=AorCinstruction);
+    ARegister(in=addressValue, load=AorCinstruction, out=aAddressValue);
+    Mux16(a=aAddressValue, b=false, sel=false, out[0..14]=addressM);
 
     Mux16(a=aAddressValue, b=inM, sel=instruction[12], out=inMARegister);
     
     DRegister(in=aluOut, load=instruction[4], out=dValue);
     
-    ALU(x=dValue, y=inMARegister, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7], no=instruction[6], out=outM, zr=zr, ng=ng);
-    ALU(x=dValue, y=inMARegister, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7], no=instruction[6], out=aluOut);
-    
-    PC(in=addressValue, load=loader, inc=true, reset=reset, out[0..14]=pc);
+    ALU(x=dValue, y=inMARegister, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7], no=instruction[6], out=aluOut, zr=zr, ng=ng);
+    Mux16(a=aluOut, b=false, sel=false, out=outM);
 
+    And(a=instruction[15], b=instruction[3], out=writeM);
+
+    Not(in=ng, out=notNg);
+    Not(in=zr, out=notZr);
+    And(a=notNg, b=notZr, out=notNgZr); 
+    And(a=instruction[0], b=notNgZr, out=jgt);
+    And(a=instruction[1], b=zr, out=jeq); 
+    And(a=instruction[2], b=ng, out=jlt);
+    Or(a=jlt, b=jeq, out=jleq);
+    Or(a=jleq, b=jgt, out=jump);
+    And(a=instruction[15], b=jump, out=loader);
+
+    PC(in=aAddressValue, load=loader, inc=true, reset=reset, out[0..14]=pc);
 }
