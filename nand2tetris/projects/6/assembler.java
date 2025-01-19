@@ -1,20 +1,40 @@
 import java.util.*;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
+
 
 public class assembler {
     private HashMap<String, Integer> symbolTable;
     private Map<String, String> compMap = new HashMap<>();
     private Map<String, String> jumpMap = new HashMap<>();
     private int symbolCounter = 0;
-    private int lineCounter = 1;
-    private ArrayList<String> bitInstruction;
+    private int lineCounter = 0;
+    private ArrayList<String> bitInstruction = new ArrayList<String>();
 
     public assembler(String[] path) {
         symbolTable = preDefinedSymbols();
         computationInit();
         jumpInit();
+        labelScan(path[0]);
         asmScanner(path[0]);
+    }
+
+    public void hackWriteOut(String pathName) {
+        String fileName = pathName.substring(pathName.lastIndexOf('/') + 1, pathName.lastIndexOf('.'));
+        try {
+            PrintWriter hackWriter = new PrintWriter(fileName + ".hack");
+
+            for(int i=0; i < bitInstruction.size() ;i++){
+                hackWriter.println(bitInstruction.get(i));
+            }
+
+            hackWriter.close();
+        } catch (IOException e) {
+            System.out.println(e);
+        }
+        
     }
 
     public HashMap<String, Integer> preDefinedSymbols() {
@@ -83,12 +103,46 @@ public class assembler {
             File file = new File(pathString); //TO-DO FIND RIGHT FILE
             Scanner scanner = new Scanner(file);
 
-            while (scanner.hasNext()) {
-                asmInstruction = scanner.next();
-                if (asmInstruction.charAt(0) == '@' || asmInstruction.charAt(0) == '(' ) { //( Will cause problems labels must be set to the following line i think
+            while (scanner.hasNextLine()) {
+                asmInstruction = scanner.nextLine();
+                asmInstruction = asmInstruction.replaceAll("\\s+", "");
+                if(asmInstruction.indexOf("//") != -1|| asmInstruction.isEmpty()) {
+                    continue;
+                }
+
+                if (asmInstruction.charAt(0) == '(' ) {
+                    continue;
+                }
+
+                if (asmInstruction.charAt(0) == '@') { //( Will cause problems labels must be set to the following line i think
                     aInstruction(asmInstruction);
                 } else {
                     cInstruction(asmInstruction);
+                }
+            }
+
+            scanner.close();
+        } catch (FileNotFoundException e) {
+            System.out.println(e);
+        }
+    }
+
+    public void labelScan(String pathString) {
+        String asmInstruction = "";
+        try {
+            File file = new File(pathString); //TO-DO FIND RIGHT FILE
+            Scanner scanner = new Scanner(file);
+
+            while (scanner.hasNextLine()) {
+                asmInstruction = scanner.nextLine();
+                asmInstruction = asmInstruction.replaceAll("\\s+", "");
+                if(asmInstruction.indexOf("//") != -1|| asmInstruction.isEmpty()) {
+                    continue;
+                }
+
+                if (asmInstruction.charAt(0) == '(' ) { //( Will cause problems labels must be set to the following line i think
+                    aInstruction(asmInstruction);
+                    continue;
                 }
                 lineCounter++;
             }
@@ -97,18 +151,16 @@ public class assembler {
         } catch (FileNotFoundException e) {
             System.out.println(e);
         }
-
-
     }
 
     public void aInstruction(String currentInstruction) {
         String symbol = "";
         if(currentInstruction.charAt(0) == '('){
-            symbol = currentInstruction.substring(1, currentInstruction.length() - 2);
+            symbol = currentInstruction.substring(1, currentInstruction.length() - 1);
             symbolTable.put(symbol, lineCounter);
-        } else {
-            symbol = currentInstruction.substring(1);
+            return;
         }
+        symbol = currentInstruction.substring(1);
         
         if(isNumeric(symbol)){
             bitInstruction.add(decimalToBinary(symbol));
@@ -122,15 +174,17 @@ public class assembler {
 
     public String decimalToBinary(String decimal) {
         int dec = Integer.parseInt(decimal);
-        String binary = "0";
+        String binary = "";
 
-        while (dec != 0) {
+        while (binary.length() != 15) {
             int remainder = dec % 2;
 
-            binary = binary + remainder;
+            binary = remainder + binary;
 
             dec = dec/2;
         }
+
+        binary = "0" + binary;
 
         return binary;
     }
@@ -166,7 +220,7 @@ public class assembler {
             jump = jumpConversion(jumpString);
         }
 
-        binary = comp + dest + jump;
+        binary = binary + comp + dest + jump;
         bitInstruction.add(binary);
 
     }
@@ -181,6 +235,7 @@ public class assembler {
 
     public String destConversion(String destination) {
         String dest = "";
+        
 
         switch (destination) {
             case "M":
@@ -229,6 +284,7 @@ public class assembler {
     }
 
     public static void main (String[] args) {
-
+        assembler assemblerScript = new assembler(args);
+        assemblerScript.hackWriteOut(args[0]);
     }
 }
